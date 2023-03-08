@@ -1,93 +1,102 @@
-const { Client, Buttons, LocalAuth } = require("whatsapp-web.js");
 const qrcode = require("qrcode-terminal");
+const { Client, Buttons, LocalAuth } = require("whatsapp-web.js");
 
-var clientes = [];
-
-//criar nosso client para rodar local
 const client = new Client({
   authStrategy: new LocalAuth(),
-});
-
-client.on("qr", (qr) => {
-  qrcode.generate(qr, { small: true });
-});
-
-client.on("ready", () => {
-  console.log("deu tudo certo! estamos conectados...");
-});
-
-client.on("message", (msg) => {
-  console.log(`nova mensagem: ${msg.body} from: ${msg.from}`);
-
-  //VERIFICAR SE A PESSOA TEM UMA CONTA ABERTA
-  const encontrado = clientes.find((element) => element.numero == msg.from);
-  console.log(encontrado);
-
-  if (msg.body === "Atendimento") {
-    if (!encontrado) {
-      var cliente = {
-        numero: msg.from,
-        nome: msg.sender.pushname || msg.sender.verifiedName,
-        momento: 0,
-        destino: 0,
-      };
-      clientes.push(cliente);
-      client.sendMessage(
-        msg.from,
-        `Olá, ${cliente.nome} Obrigado por entrar em contato com Fagner Ribeiro.`
-      );
-    } else {
-      let button = new Buttons(
-        "O que deseja fazer neste atendimento?",
-        [
-          { body: "MegaHair" },
-          { body: "Manutenção" },
-          { body: "Vender Cabelo" },
-          { body: "Finalizar Atendimento" },
-        ],
-        `Atendimento em andamento.. ${
-          msg.sender.pushname || msg.sender.verifiedName
-        } 🏛`
-      );
-      client.sendMessage(msg.from, button);
-    }
-  } else {
-    // Caso não seja a opção Atendimento, verificamos se o cliente existe
-    if (encontrado) {
-      if (msg.body === "Finalizar Atendimento") {
-        //BUSCO O INDÍCE A SER REMOVIDO
-        let index = clientes.findIndex(
-          (cliente) => cliente.numero === msg.from
-        );
-        //REMOVER O ELEMENTO DO ARRAY
-        clientes.splice(index, 1);
-        client.sendMessage(
-          msg.from,
-          `Obrigado pelo contato, estamos a disposição..`
-        );
-      } else if (
-        msg.body === "MegaHair" ||
-        msg.body === "Manutenção" ||
-        msg.body === "Vender Cabelo"
-      ) {
-        encontrado.momento = 1;
-        client.sendMessage(
-          msg.from,
-          `💸 ${encontrado.nome} Opção ${msg.body} texto aqui...`
-        );
-      }
-    } else {
-      // Caso não exista, só disponibilizamos a opção Atendimento
-      let button = new Buttons(
-        "O que deseja fazer agora?",
-        [{ body: "Atendimento" }],
-        `Olá, ${
-          msg.sender.pushname || msg.sender.verifiedName
-        } Seja bem vindo(a) ao Salão Havan..`
-      );
-      client.sendMessage(msg.from, button);
-    }
-  }
+  puppeteer: { headless: false },
 });
 
 client.initialize();
+
+client.on("loading_screen", (percent, message) => {
+  console.log("LOADING SCREEN", percent, message);
+});
+
+client.on("qr", (qr) => {
+  // NOTE: This event will not be fired if a session is specified.
+  console.log("QR RECEIVED", qr);
+});
+
+client.on("authenticated", () => {
+  console.log("AUTHENTICATED");
+});
+
+client.on("auth_failure", (msg) => {
+  // Fired if session restore was unsuccessful
+  console.error("AUTHENTICATION FAILURE", msg);
+});
+
+client.on("ready", () => {
+  console.log("READY");
+});
+let clientes = [];
+
+client.on("message", async (msg) => {
+  console.log("MESSAGE RECEIVED", msg);
+  let chat = await msg.getChat();
+  if (chat.isGroup) {
+    console.log("MENSAGEM DE GRUPO NÃO RESPONDER");
+    return;
+  } else {
+    //VERIFICAR SE A PESSOA TEM UMA CONTA ABERTA
+    let cliente = clientes.find((element) => element.numero == msg.from);
+    // iniciando opções antes do atendimento
+    var opcoes = [];
+    if (cliente && cliente.estado === "logado") {
+      opcoes = [
+        { body: "💻 ACESSAR MINHA CONTA 💻" },
+        { body: "🧨 ENCERRAR CONTA 🧨" },
+      ];
+    } else {
+      if (msg.body == "🚀 ABRIR CONTA 🚀" && !cliente) {
+        cliente = {
+          numero: msg.from,
+          nome: msg._data.notifyName,
+          estado: "novo",
+        };
+        clientes.push(cliente);
+        opcoes = [{ body: "💻 ACESSAR MINHA CONTA 💻" }];
+        client.sendMessage(
+          msg.from,
+          `💸 Parabéns, ${cliente.nome} Sua conta foi criada com sucesso.`
+        );
+      } else {
+        opcoes = [{ body: "🚀 ABRIR CONTA 🚀" }];
+      }
+    }
+
+    if (
+      msg.body == "💻 ACESSAR MINHA CONTA 💻" &&
+      cliente &&
+      cliente.estado !== "logado"
+    ) {
+      cliente.estado = "logado";
+      client.sendMessage(
+        msg.from,
+        ` Certo ${cliente.nome} ACESSANDO SUA CONTA....`
+      );
+    }
+
+    if (
+      msg.body == "🧨 ENCERRAR CONTA 🧨" &&
+      cliente &&
+      cliente.estado !== "logado"
+    ) {
+      clientes = clientes.filter((element) => element.numero !== msg.from);
+      client.sendMessage(
+        msg.from,
+        `Certo ${cliente.nome} ENCERRANDO SUA CONTA....`
+      );
+    }
+    let button = new Buttons(
+      "O que deseja fazer agora?",
+      opcoes,
+      cliente && cliente.estado === "logado"
+        ? ""
+        : `🏛 Olá, ${msg._data.notifyName} Seja bem vindo(a) ao Ficticious Bank 🏛 apenas para fins didáticos`
+    );
+
+    client.sendMessage(msg.from, button);
+  }
+  // final do codigo de atendimento
+});
