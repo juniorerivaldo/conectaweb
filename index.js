@@ -104,7 +104,10 @@ client.on("message", async (msg) => {
     }
     if (atendendo && cliente.numero == msg.from && cliente.estado === 2) {
       if (msg.body == "Mega Hair") {
-        client.sendMessage(msg.from, `AQUI VAI O TEXTO SOBRE MEGAHAIR`);
+        client.sendMessage(
+          msg.from,
+          "Bem vinda ao melhor método de alongamento do Brasil.😍\nHoje nosso método consiste em te dar: \n✅segurança, ✅conforto e ✅discrição.\nO método Fagner Ribeiro consiste em 5 passos:\n1º seleção do cabelo,\n2ºpreparação,\n3º aplicação,\n4ºcuidado diário e\n5º retirada do megahair.\nNossos cabelos são 100% naturais🍀,\no que faz total diferença para o seu megahair."
+        );
       }
       if (msg.body == "Compra de Cabelo") {
         client.sendMessage(msg.from, `AQUI VAI O TEXTO SOBRE COMPRA DE CABELO`);
