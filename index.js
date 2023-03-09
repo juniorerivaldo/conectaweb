@@ -3,100 +3,126 @@ const { Client, Buttons, LocalAuth } = require("whatsapp-web.js");
 
 const client = new Client({
   authStrategy: new LocalAuth(),
-  puppeteer: { headless: false },
+  puppeteer: { headless: true },
 });
 
-client.initialize();
-
 client.on("loading_screen", (percent, message) => {
-  console.log("LOADING SCREEN", percent, message);
+  console.log(":: CARREGANDO WHATSAPP ", percent, "% ::");
 });
 
 client.on("qr", (qr) => {
-  // NOTE: This event will not be fired if a session is specified.
-  console.log("QR RECEIVED", qr);
+  qrcode.generate(qr, { small: true });
 });
 
 client.on("authenticated", () => {
-  console.log("AUTHENTICATED");
+  console.log(":: WHATSAPP AUTENTICADO COM SUCESSO ::");
 });
 
 client.on("auth_failure", (msg) => {
-  // Fired if session restore was unsuccessful
-  console.error("AUTHENTICATION FAILURE", msg);
+  console.log("AUTHENTICATION FAILURE", msg);
 });
 
 client.on("ready", () => {
-  console.log("READY");
+  console.log(":: TUDO PRONTO BOT RODANDO :) ::");
 });
+// variaveis de controle
+let cliente = {};
 let clientes = [];
+let msgs = [];
+let atendendo = false;
+let primeiraMensagem = "";
+let cadastrado = 0;
 
 client.on("message", async (msg) => {
-  console.log("MESSAGE RECEIVED", msg);
   let chat = await msg.getChat();
   if (chat.isGroup) {
-    console.log("MENSAGEM DE GRUPO NÃO RESPONDER");
+    console.log(":: MENSAGEM DE GRUPO NÃO RESPONDER ::");
     return;
   } else {
-    //VERIFICAR SE A PESSOA TEM UMA CONTA ABERTA
-    let cliente = clientes.find((element) => element.numero == msg.from);
-    // iniciando opções antes do atendimento
-    var opcoes = [];
-    if (cliente && cliente.estado === "logado") {
-      opcoes = [
-        { body: "💻 ACESSAR MINHA CONTA 💻" },
-        { body: "🧨 ENCERRAR CONTA 🧨" },
-      ];
+    if (!primeiraMensagem) {
+      primeiraMensagem = msg.body;
+      msgs.push(primeiraMensagem);
+      //console.log("Primeira mensagem salva:", primeiraMensagem);
+    } else if (msg.body === primeiraMensagem) {
+      // console.log("As duas mensagens são iguais.");
     } else {
-      if (msg.body == "🚀 ABRIR CONTA 🚀" && !cliente) {
-        cliente = {
-          numero: msg.from,
-          nome: msg._data.notifyName,
-          estado: "novo",
-        };
+      // console.log("As duas mensagens são diferentes.");
+      if (cadastrado == 0) {
+        cliente = { nome: msg.body, estado: 1, numero: msg.from };
         clientes.push(cliente);
-        opcoes = [{ body: "💻 ACESSAR MINHA CONTA 💻" }];
+      }
+
+      cadastrado = 1;
+    }
+    if (!atendendo) {
+      if (
+        msg.body != "Mega Hair" &&
+        msg.body != "Compra de Cabelo" &&
+        msg.body != "Marcar horário" &&
+        msg.body != "Vender meu Cabelo" &&
+        msg.body != "Outros serviços"
+      ) {
         client.sendMessage(
           msg.from,
-          `💸 Parabéns, ${cliente.nome} Sua conta foi criada com sucesso.`
+          "Oiee! Muito prazer! Vou ajudar você por aqui!😉"
         );
-      } else {
-        opcoes = [{ body: "🚀 ABRIR CONTA 🚀" }];
+        client.sendMessage(
+          msg.from,
+          "Antes de dar continuidade ao seu atendimento, pode me dizer seu nome? 😊"
+        );
+        atendendo = true;
       }
     }
+    if (atendendo && cliente.nome != undefined && cliente.estado === 1) {
+      var opcoes = [];
 
-    if (
-      msg.body == "💻 ACESSAR MINHA CONTA 💻" &&
-      cliente &&
-      cliente.estado !== "logado"
-    ) {
-      cliente.estado = "logado";
-      client.sendMessage(
-        msg.from,
-        ` Certo ${cliente.nome} ACESSANDO SUA CONTA....`
+      opcoes = [
+        { body: "Mega Hair" },
+        { body: "Compra de Cabelo" },
+        { body: "Marcar horário" },
+      ];
+
+      opcoes2 = [{ body: "Vender meu Cabelo" }, { body: "Outros serviços" }];
+
+      let button1 = new Buttons(
+        "Escolha a opção que deseja atendimento:",
+        opcoes,
+        `\nObrigado, ${cliente.nome}, agora eu sei o seu nome! É um prazer poder te ajudar.\n`
       );
-    }
+      let button2 = new Buttons("\nVocê também pode escolher:", opcoes2);
 
-    if (
-      msg.body == "🧨 ENCERRAR CONTA 🧨" &&
-      cliente &&
-      cliente.estado !== "logado"
-    ) {
-      clientes = clientes.filter((element) => element.numero !== msg.from);
-      client.sendMessage(
-        msg.from,
-        `Certo ${cliente.nome} ENCERRANDO SUA CONTA....`
-      );
-    }
-    let button = new Buttons(
-      "O que deseja fazer agora?",
-      opcoes,
-      cliente && cliente.estado === "logado"
-        ? ""
-        : `🏛 Olá, ${msg._data.notifyName} Seja bem vindo(a) ao Ficticious Bank 🏛 apenas para fins didáticos`
-    );
+      client.sendMessage(msg.from, button1);
+      client.sendMessage(msg.from, button2);
 
-    client.sendMessage(msg.from, button);
+      for (let i = 0; i < clientes.length; i++) {
+        if (clientes[i].numero === msg.from) {
+          clientes[i].estado = 2;
+          break;
+        }
+      }
+      clientes = [...clientes];
+    }
+    if (atendendo && cliente.numero == msg.from && cliente.estado === 2) {
+      if (msg.body == "Mega Hair") {
+        client.sendMessage(msg.from, `AQUI VAI O TEXTO SOBRE MEGAHAIR`);
+      }
+      if (msg.body == "Compra de Cabelo") {
+        client.sendMessage(msg.from, `AQUI VAI O TEXTO SOBRE COMPRA DE CABELO`);
+      }
+      if (msg.body == "Marcar horário") {
+        client.sendMessage(msg.from, `AQUI VAI O TEXTO SOBRE MARCAR HORARIO`);
+      }
+      if (msg.body == "Vender meu Cabelo") {
+        client.sendMessage(
+          msg.from,
+          `AQUI VAI O TEXTO SOBRE VENDER MEU CABELO`
+        );
+      }
+      if (msg.body == "Outros serviços") {
+        client.sendMessage(msg.from, `AQUI VAI O TEXTO SOBRE OUTROS SERVICOS`);
+      }
+    }
   }
-  // final do codigo de atendimento
 });
+
+client.initialize();
