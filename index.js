@@ -16,6 +16,10 @@ axios
     if (userAuth.status == "ativo") {
       console.log(`:: ACESSO LIBERADO PARA: ${userAuth.name} ::`);
       botStart();
+    } else {
+      console.log(
+        `:: ERRO AO INICIAR SISTEMA PARA : ${userAuth.name} ENTRE EM CONTATO COM ADM ::`
+      );
     }
   })
   .catch((error) => {
