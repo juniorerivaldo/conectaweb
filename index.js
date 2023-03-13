@@ -31,6 +31,7 @@ botStart = function () {
     authStrategy: new LocalAuth(),
     puppeteer: { headless: true },
   });
+  client.initialize();
 
   client.on("loading_screen", (percent, message) => {
     console.log(":: CARREGANDO WHATSAPP ", percent, "% ::");
@@ -90,11 +91,7 @@ botStart = function () {
         ) {
           client.sendMessage(
             msg.from,
-            "Oiee! Muito prazer! Vou ajudar você por aqui!😉"
-          );
-          client.sendMessage(
-            msg.from,
-            "Antes de dar continuidade ao seu atendimento, pode me dizer seu nome? 😊"
+            "Oiee! Muito prazer! Vou ajudar você por aqui!😉\nAntes de dar continuidade ao seu atendimento, pode me dizer seu nome? 😊"
           );
           atendendo = true;
         }
@@ -159,6 +156,4 @@ botStart = function () {
       }
     }
   });
-
-  client.initialize();
 };
