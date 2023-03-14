@@ -31,6 +31,7 @@ botStart = function () {
     authStrategy: new LocalAuth(),
     puppeteer: { headless: true },
   });
+
   client.initialize();
 
   client.on("loading_screen", (percent, message) => {
@@ -91,7 +92,7 @@ botStart = function () {
         ) {
           client.sendMessage(
             msg.from,
-            "Oiee! Muito prazer! Vou ajudar você por aqui!😉\nAntes de dar continuidade ao seu atendimento, pode me dizer seu nome? 😊"
+            "Olá! Seja bem vinda! \nPara iniciar seu atendimento, qual o seu nome? 😊"
           );
           atendendo = true;
         }
@@ -110,7 +111,7 @@ botStart = function () {
         let button1 = new Buttons(
           "Escolha a opção que deseja atendimento:",
           opcoes,
-          `\nObrigado, ${cliente.nome}, agora eu sei o seu nome! É um prazer poder te ajudar.\n`
+          `\nObrigado, ${cliente.nome}! É um prazer poder te ajudar.`
         );
         let button2 = new Buttons("\nVocê também pode escolher:", opcoes2);
 
@@ -129,28 +130,31 @@ botStart = function () {
         if (msg.body == "Mega Hair") {
           client.sendMessage(
             msg.from,
-            "Bem vinda ao melhor método de alongamento do Brasil.😍\nHoje nosso método consiste em te dar: \n✅segurança, ✅conforto e ✅discrição.\nO método Fagner Ribeiro consiste em 5 passos:\n1º seleção do cabelo,\n2ºpreparação,\n3º aplicação,\n4ºcuidado diário e\n5º retirada do megahair.\nNossos cabelos são 100% naturais🍀,\no que faz total diferença para o seu megahair."
+            "Bem vinda ao melhor método de alongamento do Brasil!💆‍♀️ \nHoje nosso método te oferece: \n✅segurança, ✅conforto e ✅discrição.\nO método Fagner Ribeiro consiste em 5 passos:\n1º seleção do cabelo,\n2º preparação,\n3º aplicação,\n4º cuidado diário e\n5º retirada do megahair. \nNossos cabelos são 100% naturais, o que faz total diferença para o seu megahair."
           );
         }
         if (msg.body == "Compra de Cabelo") {
           client.sendMessage(
             msg.from,
-            `AQUI VAI O TEXTO SOBRE COMPRA DE CABELO`
+            "Encontre o cabelo ideal aqui! \nTrabalhamos somente com cabelos naturais, do Sul do Brasil 🌎 \n✅ Tipos de fios: finos e médios; \n✅ Tipos de cabelos: lisos, ondulados e cacheados; \n✅ Tamanho dos cabelos: curtos, médios e longos."
           );
         }
         if (msg.body == "Marcar horário") {
-          client.sendMessage(msg.from, `AQUI VAI O TEXTO SOBRE MARCAR HORARIO`);
+          client.sendMessage(
+            msg.from,
+            "Em breve passarei os horários disponíveis."
+          );
         }
         if (msg.body == "Vender meu Cabelo") {
           client.sendMessage(
             msg.from,
-            `AQUI VAI O TEXTO SOBRE VENDER MEU CABELO`
+            "Por favor me informe as características do seu cabelo, como tipo do fio, tipo do cabelo e tamanho."
           );
         }
         if (msg.body == "Outros serviços") {
           client.sendMessage(
             msg.from,
-            `AQUI VAI O TEXTO SOBRE OUTROS SERVICOS`
+            "Contamos com uma equipe incrível para te atender, abaixo alguns dos nossos serviços: \n✅ Alisamento; \n✅ Hidratação; \n✅ Mechas; \n✅ Corte"
           );
         }
       }
