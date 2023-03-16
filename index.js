@@ -154,7 +154,7 @@ botStart = function () {
         if (msg.body == "Outros serviços") {
           client.sendMessage(
             msg.from,
-            "Contamos com uma equipe incrível para te atender, abaixo alguns dos nossos serviços: \n✅ Alisamento; \n✅ Hidratação; \n✅ Mechas; \n✅ Corte"
+            "Contamos com uma equipe incrível para te atender, abaixo alguns dos nossos serviços: \n✅ Alisamento; \n✅ Hidratação; \n✅ Mechas; \n✅ Corte."
           );
         }
       }
