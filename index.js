@@ -29,7 +29,7 @@ axios
 botStart = function () {
   const client = new Client({
     authStrategy: new LocalAuth(),
-    puppeteer: { headless: true },
+    puppeteer: { headless: false },
   });
 
   client.initialize();
@@ -53,51 +53,31 @@ botStart = function () {
   client.on("ready", () => {
     console.log(":: TUDO PRONTO BOT RODANDO :) ::");
   });
-  // variaveis de controle
-  let cliente = {};
   let clientes = [];
-  let msgs = [];
-  let atendendo = false;
-  let primeiraMensagem = "";
-  let cadastrado = 0;
 
   client.on("message", async (msg) => {
     let chat = await msg.getChat();
     if (chat.isGroup) {
       console.log(":: MENSAGEM DE GRUPO NÃO RESPONDER ::");
       return;
-    } else {
-      if (!primeiraMensagem) {
-        primeiraMensagem = msg.body;
-        msgs.push(primeiraMensagem);
-        //console.log("Primeira mensagem salva:", primeiraMensagem);
-      } else if (msg.body === primeiraMensagem) {
-        // console.log("As duas mensagens são iguais.");
-      } else {
-        // console.log("As duas mensagens são diferentes.");
-        if (cadastrado == 0) {
-          cliente = { nome: msg.body, estado: 1, numero: msg.from };
-          clientes.push(cliente);
-        }
+    }
 
-        cadastrado = 1;
-      }
-      if (!atendendo) {
-        if (
-          msg.body != "Mega Hair" &&
-          msg.body != "Compra de Cabelo" &&
-          msg.body != "Marcar horário" &&
-          msg.body != "Vender meu Cabelo" &&
-          msg.body != "Outros serviços"
-        ) {
-          client.sendMessage(
-            msg.from,
-            "Olá! Seja bem vinda! \nPara iniciar seu atendimento, qual o seu nome? 😊"
-          );
-          atendendo = true;
-        }
-      }
-      if (atendendo && cliente.nome != undefined && cliente.estado === 1) {
+    let cliente = clientes.find((c) => c.numero === msg.from);
+
+    if (!cliente) {
+      cliente = { nome: "", estado: 0, numero: msg.from, ultimaMsg: msg.body };
+      clientes.push(cliente);
+    }
+
+    if (cliente.estado === 0) {
+      client.sendMessage(
+        msg.from,
+        "Olá! Seja bem vinda! \nPara iniciar seu atendimento, qual o seu nome? 😊"
+      );
+      cliente.estado = 1;
+    } else if (cliente.estado === 1) {
+      if (cliente.nome == "" && msg.body != cliente.ultimaMsg) {
+        cliente.nome = msg.body;
         var opcoes = [];
 
         opcoes = [
@@ -117,16 +97,9 @@ botStart = function () {
 
         client.sendMessage(msg.from, button1);
         client.sendMessage(msg.from, button2);
-
-        for (let i = 0; i < clientes.length; i++) {
-          if (clientes[i].numero === msg.from) {
-            clientes[i].estado = 2;
-            break;
-          }
-        }
-        clientes = [...clientes];
-      }
-      if (atendendo && cliente.numero == msg.from && cliente.estado === 2) {
+      } else if (cliente.nome == "" && msg.body === cliente.ultimaMsg) {
+        client.sendMessage(msg.from, "Por favor digite seu nome");
+      } else {
         if (msg.body == "Mega Hair") {
           client.sendMessage(
             msg.from,
@@ -157,6 +130,8 @@ botStart = function () {
             "Contamos com uma equipe incrível para te atender, abaixo alguns dos nossos serviços: \n✅ Alisamento; \n✅ Hidratação; \n✅ Mechas; \n✅ Corte."
           );
         }
+
+        cliente.estado = 1;
       }
     }
   });
