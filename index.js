@@ -72,7 +72,7 @@ botStart = function () {
     if (cliente.estado === 0) {
       client.sendMessage(
         msg.from,
-        "Olá! Seja bem vinda! \nPara iniciar seu atendimento, qual o seu nome? 😊"
+        "Seja bem vinda! \nPara iniciar seu atendimento, qual o seu nome? 😊"
       );
       cliente.estado = 1;
     } else if (cliente.estado === 1) {
@@ -86,24 +86,30 @@ botStart = function () {
           { body: "Marcar horário" },
         ];
 
-        opcoes2 = [{ body: "Vender meu Cabelo" }, { body: "Outros serviços" }];
+        opcoes2 = [
+          { body: "Vender meu Cabelo" },
+          { body: "Outros serviços" },
+          { body: "Encerrar atendimento" },
+        ];
 
         let button1 = new Buttons(
           "Escolha a opção que deseja atendimento:",
           opcoes,
-          `\nObrigado, ${cliente.nome}! É um prazer poder te ajudar.`
+          `Olá, ${cliente.nome}! É um prazer poder te ajudar.`
         );
         let button2 = new Buttons("\nVocê também pode escolher:", opcoes2);
 
         client.sendMessage(msg.from, button1);
-        client.sendMessage(msg.from, button2);
+        setTimeout(function () {
+          client.sendMessage(msg.from, button2);
+        }, 1000);
       } else if (cliente.nome == "" && msg.body === cliente.ultimaMsg) {
         client.sendMessage(msg.from, "Por favor digite seu nome");
       } else {
         if (msg.body == "Mega Hair") {
           client.sendMessage(
             msg.from,
-            "Bem vinda ao melhor método de alongamento do Brasil!💆‍♀️ \nHoje nosso método te oferece: \n✅segurança, ✅conforto e ✅discrição.\nO método Fagner Ribeiro consiste em 5 passos:\n1º seleção do cabelo,\n2º preparação,\n3º aplicação,\n4º cuidado diário e\n5º retirada do megahair. \nNossos cabelos são 100% naturais, o que faz total diferença para o seu megahair."
+            "Bem vinda ao melhor método de alongamento do Brasil!💆‍♀️ \nHoje nosso método te oferece: \n✅ Segurança,\n✅ Conforto e\n✅ Discrição.\nO método Fagner Ribeiro consiste em 5 passos:\n1º seleção do cabelo,\n2º preparação,\n3º aplicação,\n4º cuidado diário e\n5º retirada do megahair. \nNossos cabelos são 100% naturais, o que faz total diferença para o seu megahair."
           );
         }
         if (msg.body == "Compra de Cabelo") {
@@ -129,6 +135,12 @@ botStart = function () {
             msg.from,
             "Contamos com uma equipe incrível para te atender, abaixo alguns dos nossos serviços: \n✅ Alisamento; \n✅ Hidratação; \n✅ Mechas; \n✅ Corte."
           );
+        }
+        if (msg.body == "Encerrar atendimento") {
+          // novo bloco
+          const index = clientes.findIndex((c) => c.numero === msg.from);
+          clientes.splice(index, 1);
+          client.sendMessage(msg.from, "Atendimento encerrado. Obrigado!");
         }
 
         cliente.estado = 1;
