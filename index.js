@@ -29,7 +29,19 @@ axios
 botStart = function () {
   const client = new Client({
     authStrategy: new LocalAuth(),
-    puppeteer: { headless: false ,args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-accelerated-2d-canvas', '--no-first-run', '--no-zygote', '--single-process', '--disable-gpu'] },
+    puppeteer: {
+      headless: false,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-accelerated-2d-canvas",
+        "--no-first-run",
+        "--no-zygote",
+        "--single-process",
+        "--disable-gpu",
+      ],
+    },
   });
 
   client.initialize();
@@ -137,10 +149,40 @@ botStart = function () {
           );
         }
         if (msg.body == "Encerrar atendimento") {
-          // novo bloco
+          var opcoesFinais = [];
+
+          opcoesFinais = [
+            { body: "Muito satisfeita" },
+            { body: "Satisfeita" },
+            { body: "Insatisfeita" },
+            { body: "Muito insatisfeita" },
+          ];
+          let button3 = new Buttons(
+            "Gostaríamos de saber sua opinião sobre o atendimento recebido. \nPor favor, clique em uma das opções abaixo para avaliar nossa equipe. \nSua opinião é muito importante para nós.",
+            opcoesFinais
+          );
+
+          client.sendMessage(msg.from, button3);
+        }
+        if (msg.body == "Muito satisfeita") {
+          client.sendMessage(msg.from, "Atendimento encerrado. Obrigado!");
           const index = clientes.findIndex((c) => c.numero === msg.from);
           clientes.splice(index, 1);
+        }
+        if (msg.body == "Satisfeita") {
           client.sendMessage(msg.from, "Atendimento encerrado. Obrigado!");
+          const index = clientes.findIndex((c) => c.numero === msg.from);
+          clientes.splice(index, 1);
+        }
+        if (msg.body == "Insatisfeita") {
+          client.sendMessage(msg.from, "Atendimento encerrado. Obrigado!");
+          const index = clientes.findIndex((c) => c.numero === msg.from);
+          clientes.splice(index, 1);
+        }
+        if (msg.body == "Muito insatisfeita") {
+          client.sendMessage(msg.from, "Atendimento encerrado. Obrigado!");
+          const index = clientes.findIndex((c) => c.numero === msg.from);
+          clientes.splice(index, 1);
         }
 
         cliente.estado = 1;
