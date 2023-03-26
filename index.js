@@ -1,5 +1,5 @@
 const qrcode = require("qrcode-terminal");
-const { Client, Buttons, LocalAuth } = require("whatsapp-web.js");
+const { Client, Location, LocalAuth } = require("whatsapp-web.js");
 const axios = require("axios");
 
 const email = "fagnerribero@gmail.com";
@@ -31,22 +31,12 @@ botStart = function () {
     authStrategy: new LocalAuth(),
     puppeteer: {
       headless: false,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-accelerated-2d-canvas",
-        "--no-first-run",
-        "--no-zygote",
-        "--single-process",
-        "--disable-gpu",
-      ],
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
     },
   });
+  let mytimestamp = Math.floor(Date.now() / 1000);
 
-  client.initialize();
-
-  client.on("loading_screen", (percent, message) => {
+  client.on("loading_screen", (percent) => {
     console.log(":: CARREGANDO WHATSAPP ", percent, "% ::");
   });
 
@@ -67,126 +57,206 @@ botStart = function () {
   });
   let clientes = [];
 
-  client.on("message", async (msg) => {
-    let chat = await msg.getChat();
-    if (chat.isGroup) {
-      console.log(":: MENSAGEM DE GRUPO NÃO RESPONDER ::");
-      return;
-    }
+  client.on(
+    "message_create",
+    async (msg) => {
+      setTimeout(async function () {
+        if (msg.timestamp + 5000 > mytimestamp) {
+          if (!msg.fromMe) {
+            let chat = await msg.getChat();
+            if (chat.isGroup) {
+              console.log(":: MENSAGEM DE GRUPO NÃO RESPONDER ::");
+              return;
+            }
+            // verificar se já existe cadastro deste numero no array
+            const clienteExistente = clientes.find(
+              (cliente) => cliente.numero === msg.from
+            );
+            // se nao existir cadastrar
+            if (!clienteExistente) {
+              const novoCliente = {
+                numero: msg.from,
+                nome: "",
+                estado: 0,
+                ultimaMsg: msg.body,
+                atendimentoManual: false,
+              };
+              clientes.push(novoCliente);
+              console.log(`Novo cliente adicionado: ${novoCliente}`);
 
-    let cliente = clientes.find((c) => c.numero === msg.from);
+              client.sendMessage(
+                msg.from,
+                "Seja bem vinda! \nPara iniciar seu atendimento, qual o seu nome? 😊"
+              );
+            } else {
+              // se o cliente ainda nao tiver nome cadastrado cadastrar agora
+              if (
+                clienteExistente.nome === "" &&
+                clienteExistente.estado === 0 &&
+                clienteExistente.atendimentoManual === false &&
+                msg.body !== clienteExistente.ultimaMsg
+              ) {
+                clienteExistente.nome = msg.body;
+                clienteExistente.estado = 1;
 
-    if (!cliente) {
-      cliente = { nome: "", estado: 0, numero: msg.from, ultimaMsg: msg.body };
-      clientes.push(cliente);
-    }
+                opcoes =
+                  "1️⃣ - Mega Hair\n2️⃣ - Compra de Cabelo\n3️⃣ - Marcar horário\n";
+                opcoes2 =
+                  "4️⃣ - Vender meu Cabelo\n5️⃣ - Outros serviços\n*️⃣ - Localização do Salão\n#️⃣ - Encerrar atendimento";
 
-    if (cliente.estado === 0) {
-      client.sendMessage(
-        msg.from,
-        "Seja bem vinda! \nPara iniciar seu atendimento, qual o seu nome? 😊"
-      );
-      cliente.estado = 1;
-    } else if (cliente.estado === 1) {
-      if (cliente.nome == "" && msg.body != cliente.ultimaMsg) {
-        cliente.nome = msg.body;
-        var opcoes = [];
+                let button1 = "Escolha a opção que deseja atendimento:";
+                let button2 = "\nVocê também pode escolher:";
 
-        opcoes = [
-          { body: "Mega Hair" },
-          { body: "Compra de Cabelo" },
-          { body: "Marcar horário" },
-        ];
+                client.sendMessage(msg.from, button1);
+                client.sendMessage(msg.from, opcoes);
+                setTimeout(function () {
+                  client.sendMessage(msg.from, button2);
+                  client.sendMessage(msg.from, opcoes2);
+                }, Math.floor(Math.random() * (2700 - 1450 + 1)) + 1450);
+                clienteExistente.estado = 2;
+              } else if (
+                clienteExistente.nome === "" &&
+                clienteExistente.estado === 0 &&
+                clienteExistente.atendimentoManual === false &&
+                msg.body === clienteExistente.ultimaMsg
+              ) {
+                client.sendMessage(msg.from, "Por favor digite seu nome");
+              }
+              if (
+                clienteExistente.estado === 2 &&
+                clienteExistente.atendimentoManual === false
+              ) {
+                if (msg.body == "1") {
+                  setTimeout(function () {
+                    client.sendMessage(
+                      msg.from,
+                      "Bem vinda ao melhor método de alongamento do Brasil!💆‍♀️ \nHoje nosso método te oferece: \n✅ Segurança,\n✅ Conforto e\n✅ Discrição.\nO método Fagner Ribeiro consiste em 5 passos:\n1º seleção do cabelo,\n2º preparação,\n3º aplicação,\n4º cuidado diário e\n5º retirada do megahair. \nNossos cabelos são 100% naturais, o que faz total diferença para o seu megahair."
+                    );
+                  }, Math.floor(Math.random() * (2700 - 1450 + 1)) + 1450);
+                }
+                if (msg.body == "2") {
+                  setTimeout(function () {
+                    client.sendMessage(
+                      msg.from,
+                      "Encontre o cabelo ideal aqui! \nTrabalhamos somente com cabelos naturais, do Sul do Brasil 🌎 \n✅ Tipos de fios: finos e médios; \n✅ Tipos de cabelos: lisos, ondulados e cacheados; \n✅ Tamanho dos cabelos: curtos, médios e longos."
+                    );
+                  }, Math.floor(Math.random() * (2700 - 1450 + 1)) + 1450);
+                }
+                if (msg.body == "3") {
+                  setTimeout(function () {
+                    client.sendMessage(
+                      msg.from,
+                      "Em breve passarei os horários disponíveis."
+                    );
+                  }, Math.floor(Math.random() * (2700 - 1450 + 1)) + 1450);
+                }
+                if (msg.body == "4") {
+                  setTimeout(function () {
+                    client.sendMessage(
+                      msg.from,
+                      "Por favor me informe as características do seu cabelo, como tipo do fio, tipo do cabelo e tamanho."
+                    );
+                  }, Math.floor(Math.random() * (2700 - 1450 + 1)) + 1450);
+                }
+                if (msg.body == "5") {
+                  setTimeout(function () {
+                    client.sendMessage(
+                      msg.from,
+                      "Contamos com uma equipe incrível para te atender, abaixo alguns dos nossos serviços: \n✅ Alisamento; \n✅ Hidratação; \n✅ Mechas; \n✅ Corte."
+                    );
+                  }, Math.floor(Math.random() * (2700 - 1450 + 1)) + 1450);
+                }
 
-        opcoes2 = [
-          { body: "Vender meu Cabelo" },
-          { body: "Outros serviços" },
-          { body: "Encerrar atendimento" },
-        ];
+                if (msg.body == "*") {
+                  let location = `https://maps.google.com/maps?q=${-26.3084304},${-48.8402246}&z=17&hl=en`;
+                  client.sendMessage(msg.from, location);
+                }
 
-        let button1 = new Buttons(
-          "Escolha a opção que deseja atendimento:",
-          opcoes,
-          `Olá, ${cliente.nome}! É um prazer poder te ajudar.`
-        );
-        let button2 = new Buttons("\nVocê também pode escolher:", opcoes2);
+                // remover
+              }
+              if (msg.body == "#") {
+                clienteExistente.estado = 3;
+                let opcoesFinais =
+                  "6️⃣ - Muito satisfeita\n7️⃣ - Satisfeita\n8️⃣ - Insatisfeita\n9️⃣ - Muito insatisfeita\n";
+                let textoFinal =
+                  "Gostaríamos de saber sua opinião sobre o atendimento recebido. \nPor favor, clique em uma das opções abaixo para avaliar nossa equipe. \nSua opinião é muito importante para nós.";
 
-        client.sendMessage(msg.from, button1);
-        setTimeout(function () {
-          client.sendMessage(msg.from, button2);
-        }, 1000);
-      } else if (cliente.nome == "" && msg.body === cliente.ultimaMsg) {
-        client.sendMessage(msg.from, "Por favor digite seu nome");
-      } else {
-        if (msg.body == "Mega Hair") {
-          client.sendMessage(
-            msg.from,
-            "Bem vinda ao melhor método de alongamento do Brasil!💆‍♀️ \nHoje nosso método te oferece: \n✅ Segurança,\n✅ Conforto e\n✅ Discrição.\nO método Fagner Ribeiro consiste em 5 passos:\n1º seleção do cabelo,\n2º preparação,\n3º aplicação,\n4º cuidado diário e\n5º retirada do megahair. \nNossos cabelos são 100% naturais, o que faz total diferença para o seu megahair."
-          );
-        }
-        if (msg.body == "Compra de Cabelo") {
-          client.sendMessage(
-            msg.from,
-            "Encontre o cabelo ideal aqui! \nTrabalhamos somente com cabelos naturais, do Sul do Brasil 🌎 \n✅ Tipos de fios: finos e médios; \n✅ Tipos de cabelos: lisos, ondulados e cacheados; \n✅ Tamanho dos cabelos: curtos, médios e longos."
-          );
-        }
-        if (msg.body == "Marcar horário") {
-          client.sendMessage(
-            msg.from,
-            "Em breve passarei os horários disponíveis."
-          );
-        }
-        if (msg.body == "Vender meu Cabelo") {
-          client.sendMessage(
-            msg.from,
-            "Por favor me informe as características do seu cabelo, como tipo do fio, tipo do cabelo e tamanho."
-          );
-        }
-        if (msg.body == "Outros serviços") {
-          client.sendMessage(
-            msg.from,
-            "Contamos com uma equipe incrível para te atender, abaixo alguns dos nossos serviços: \n✅ Alisamento; \n✅ Hidratação; \n✅ Mechas; \n✅ Corte."
-          );
-        }
-        if (msg.body == "Encerrar atendimento") {
-          var opcoesFinais = [];
+                client.sendMessage(msg.from, textoFinal);
+                setTimeout(function () {
+                  client.sendMessage(msg.from, opcoesFinais);
+                }, Math.floor(Math.random() * (2700 - 1450 + 1)) + 1450);
+              }
+              console.log(clienteExistente.estado);
+              if (clienteExistente.estado === 3) {
+                console.log("cheguei aqui");
 
-          opcoesFinais = [
-            { body: "Muito satisfeita" },
-            { body: "Satisfeita" },
-            { body: "Insatisfeita" },
-            { body: "Muito insatisfeita" },
-          ];
-          let button3 = new Buttons(
-            "Gostaríamos de saber sua opinião sobre o atendimento recebido. \nPor favor, clique em uma das opções abaixo para avaliar nossa equipe. \nSua opinião é muito importante para nós.",
-            opcoesFinais
-          );
-
-          client.sendMessage(msg.from, button3);
+                if (msg.body == "6") {
+                  client.sendMessage(
+                    msg.from,
+                    "Atendimento encerrado. Obrigado!"
+                  );
+                  const index = clientes.findIndex(
+                    (c) => c.numero === msg.from
+                  );
+                  clientes.splice(index, 1);
+                }
+                if (msg.body == "7") {
+                  client.sendMessage(
+                    msg.from,
+                    "Atendimento encerrado. Obrigado!"
+                  );
+                  const index = clientes.findIndex(
+                    (c) => c.numero === msg.from
+                  );
+                  clientes.splice(index, 1);
+                }
+                if (msg.body == "8") {
+                  client.sendMessage(
+                    msg.from,
+                    "Atendimento encerrado. Obrigado!"
+                  );
+                  const index = clientes.findIndex(
+                    (c) => c.numero === msg.from
+                  );
+                  clientes.splice(index, 1);
+                }
+                if (msg.body == "9") {
+                  client.sendMessage(
+                    msg.from,
+                    "Atendimento encerrado. Obrigado!"
+                  );
+                  const index = clientes.findIndex(
+                    (c) => c.numero === msg.from
+                  );
+                  clientes.splice(index, 1);
+                }
+              }
+            }
+          }
+          // mensagem inicial minha
+          else {
+            console.log("MINHA MSG");
+            const clienteExistente = clientes.find(
+              (cliente) => cliente.numero === msg.to
+            );
+            if (!clienteExistente) {
+              console.log("CLIENTE QUE ESTOU ENVIANDO MSG NOVO");
+              const novoCliente = {
+                numero: msg.to,
+                nome: "",
+                estado: 0,
+                ultimaMsg: "",
+                atendimentoManual: true,
+              };
+              clientes.push(novoCliente);
+            }
+          }
+        } else {
+          console.log("MSG ANTIGA NAO RESPONDER");
         }
-        if (msg.body == "Muito satisfeita") {
-          client.sendMessage(msg.from, "Atendimento encerrado. Obrigado!");
-          const index = clientes.findIndex((c) => c.numero === msg.from);
-          clientes.splice(index, 1);
-        }
-        if (msg.body == "Satisfeita") {
-          client.sendMessage(msg.from, "Atendimento encerrado. Obrigado!");
-          const index = clientes.findIndex((c) => c.numero === msg.from);
-          clientes.splice(index, 1);
-        }
-        if (msg.body == "Insatisfeita") {
-          client.sendMessage(msg.from, "Atendimento encerrado. Obrigado!");
-          const index = clientes.findIndex((c) => c.numero === msg.from);
-          clientes.splice(index, 1);
-        }
-        if (msg.body == "Muito insatisfeita") {
-          client.sendMessage(msg.from, "Atendimento encerrado. Obrigado!");
-          const index = clientes.findIndex((c) => c.numero === msg.from);
-          clientes.splice(index, 1);
-        }
-
-        cliente.estado = 1;
-      }
-    }
-  });
+      });
+    },
+    Math.floor(Math.random() * (2700 - 1450 + 1)) + 1450
+  );
+  client.initialize();
 };
